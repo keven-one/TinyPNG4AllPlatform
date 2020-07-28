@@ -1,0 +1,2 @@
+# TinyPNGAllPlatform
+TinyPNGAllPlatform
