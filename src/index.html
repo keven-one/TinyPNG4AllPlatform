@@ -13,7 +13,7 @@
     <div class="tool">
       <div>0 tasks</div>
       <div style="display: flex;">
-        <div id="setting"></div>
+        <div id="setting" onclick="settingClick()"></div>
         <div id="folder"></div>
       </div>
     </div>
@@ -24,8 +24,9 @@
       </div>
       <div class="input-container">
         <label class="input-title">Output Path:</label>
-        <input id="output" class="key-input" type="file" placeholder="Output Path" webkitdirectory directory
-          onchange="outputChange()">
+        <input id="output" class="key-input" type="text" placeholder="Output Path" webkitdirectory directory
+          onchange="outputChange(event)">
+        <button onclick="selectfile()">...</button>
       </div>
       <div class="input-container">
         <label class="input-title">Replace Origin:</label>
