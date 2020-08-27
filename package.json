@@ -1,6 +1,6 @@
 {
-  "name": "my-new-app",
-  "productName": "my-new-app",
+  "name": "vue-electron",
+  "productName": "vue-electron",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/index.js",
@@ -9,7 +9,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint src --color"
+    "lint": "echo \"No linting configured\""
   },
   "keywords": [],
   "author": "king",
@@ -32,7 +32,7 @@
         "packageManager": "yarn"
       },
       "electronWinstallerConfig": {
-        "name": "my_new_app"
+        "name": "vue_electron"
       },
       "electronInstallerDebian": {},
       "electronInstallerRedhat": {},
@@ -42,25 +42,23 @@
       },
       "windowsStoreConfig": {
         "packageName": "",
-        "name": "mynewapp"
+        "name": "vueelectron"
       }
     }
   },
   "dependencies": {
     "electron-compile": "^6.4.4",
+    "electron-devtools-installer": "^2.1.0",
     "electron-squirrel-startup": "^1.0.0",
-    "electron-store": "^6.0.0"
+    "electron-store": "^6.0.0",
+    "vue": "^2.1.7",
+    "vueify": "^9.4.1"
   },
   "devDependencies": {
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "electron-forge": "^5.2.4",
-    "electron-prebuilt-compile": "8.2.0",
-    "eslint": "^3",
-    "eslint-config-airbnb": "^15",
-    "eslint-plugin-import": "^2",
-    "eslint-plugin-jsx-a11y": "^5",
-    "eslint-plugin-react": "^7"
+    "electron-prebuilt-compile": "8.2.0"
   }
 }

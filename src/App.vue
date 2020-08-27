@@ -1,0 +1,416 @@
+<!--
+ * @Description: Description
+ * @Author: Yongchao Wang
+ * @Date: 2020-08-24 06:46:19
+ * @LastEditors: Yongchao Wang
+ * @LastEditTime: 2020-08-25 17:52:23
+-->
+<template>
+  <div class="container">
+    <div class="bgcontainer" id="drag">
+      <div :class="listClass">
+        <div class="cell" v-for="(item, index) in uploadlist" :key="index">
+          <img :src="item.path" class="mini-img" />
+          <div class="upload-status">{{item.status}}</div>
+          <div class="upload-percent">{{item.percent}}</div>
+        </div>
+      </div>
+      <img :src="dropImg" class="bg" alt />
+      <div :class="tipClass">Drop .JPG/.PNG Images here!</div>
+      <div class="tool">
+        <div>0 tasks</div>
+        <div style="display: flex;">
+          <div id="folder" @click="openDirectory"></div>
+          <div id="setting" @click="settingClick"></div>
+        </div>
+      </div>
+      <div class="setting-input">
+        <div class="input-container">
+          <label class="input-title">API Key:</label>
+          <input id="key" class="key-input" type="text" placeholder="API Key" v-model="APIKey" />
+        </div>
+        <div class="input-container">
+          <label class="input-title">Output Path:</label>
+          <input
+            id="output"
+            class="key-input"
+            type="text"
+            placeholder="Output Path"
+            webkitdirectory
+            directory
+            :value="outputPath"
+            @change="outputChange($event)"
+          />
+          <button @click="selectfile">...</button>
+        </div>
+        <div class="input-container">
+          <label class="input-title">Replace Origin:</label>
+          <input id="replace" type="checkbox" v-model="origin" value="Origin" />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { log } from "console";
+const BrowserWindow = require("electron").remote.BrowserWindow;
+const { dialog } = require("electron").remote;
+const shell = require("electron").shell;
+const os = require("os");
+const fs = require("fs");
+const Store = require("electron-store");
+const store = new Store();
+
+export default {
+  data() {
+    return {
+      uploadlist: [],
+      uploadIndex: 0,
+      isbusy: false,
+      ot: "",
+      oloaded: "",
+      listClass: ["list", "lhidden"],
+      tipClass: ["tip"],
+      dropImg: "./assets/zip.png",
+      origin: store.get("origin"),
+      APIKey: store.get("APIKey"),
+      url: "https://api.tinify.com/shrink",
+    };
+  },
+
+  components: {},
+
+  computed: {
+    outputPath() {
+      if (store.get("outputPath")) {
+        return store.get("outputPath");
+      }
+      var p = navigator.platform;
+
+      if (p.indexOf("Win") == 0) {
+        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
+        return os.homedir() + "/Downloads/TinyAll-output";
+      } else if (p.indexOf("Mac") == 0) {
+        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
+        return os.homedir() + "/Downloads/TinyAll-output";
+      }
+      return "";
+    },
+  },
+
+  watch: {
+    APIKey(newval, oldval) {
+      store.set("APIKey", newval);
+    },
+    origin(newval, oldval) {
+      store.set("origin", newval);
+    },
+  },
+
+  mounted() {
+    const dragWrapper = document.getElementById("drag");
+    dragWrapper.addEventListener("drop", (e) => {
+      e.preventDefault(); //阻止e的默认行为
+      const files = e.dataTransfer.files;
+      if (files && files.length >= 1) {
+        this.addPng(files);
+      }
+    });
+    //这个事件也需要屏蔽
+    dragWrapper.addEventListener("dragover", (e) => {
+      e.preventDefault();
+    });
+  },
+
+  methods: {
+    //setting click
+    settingClick(e) {
+      if (BrowserWindow.getFocusedWindow().getSize()[1] === 500) {
+        BrowserWindow.getFocusedWindow().setSize(400, 400, false);
+      } else {
+        BrowserWindow.getFocusedWindow().setSize(400, 500, false);
+      }
+    },
+    // outputpath
+    outputChange(event) {
+      console.log(document);
+    },
+    // selectpath button click
+    selectfile() {
+      dialog
+        .showOpenDialog({
+          filters: [
+            { name: "jpg", extensions: ["jpg"] },
+            { name: "png", extensions: ["png"] },
+            { name: "jpg", extensions: ["jpeg"] },
+          ],
+          properties: ["openDirectory"],
+          title: "select picture",
+        })
+        .then((res) => {});
+    },
+    openDirectory() {
+      fs.exists(store.get("outputPath"), function (exists) {
+        if (!exists) {
+          fs.mkdir(store.get("outputPath"), function () {
+            shell.showItemInFolder(store.get("outputPath"));
+          });
+        } else {
+          shell.showItemInFolder(store.get("outputPath"));
+        }
+      });
+    },
+    addPng(files) {
+      for (let element of files) {
+        if (element.type.indexOf("image/") === -1) {
+          return;
+        }
+        this.uploadQueue(element);
+      }
+
+      this.listClass = ["list", "lshow"];
+      this.tipClass = ["tip", "lhidden"];
+      this.dropImg = "";
+    },
+
+    uploadQueue(file) {
+      this.uploadlist.push(file);
+      if (!this.isbusy) {
+        this.uploadFile(file);
+      }
+    },
+    uploadFile(fileObj) {
+      this.isbusy = true;
+      var url = this.url; // 接收上传文件的后台地址
+      let apiKey = store.get("APIKey");
+      const key = btoa(`api:${apiKey}`);
+      var form = new FormData(); // FormData 对象
+      form.append("file", new Blob([fileObj])); // 文件对象
+
+      const uploadRequest = new XMLHttpRequest(); // XMLHttpRequest 对象
+
+      uploadRequest.withCredentials = true;
+      uploadRequest.open("post", url, true); //post方式，url为服务器请求地址，true 该参数规定请求是否异步处理。
+      uploadRequest.setRequestHeader("Authorization", `Basic ${key}`);
+      uploadRequest.setRequestHeader("Content-Type", "image/png");
+      uploadRequest.onload = (evt) => {
+        //服务断接收完文件返回的结果
+        this.uploadIndex++;
+        var data = JSON.parse(evt.target.responseText);
+        if (data.output.url) {
+          this.downloadFile(data.output.url, fileObj);
+        } else {
+        }
+        if (this.uploadlist.length > this.uploadIndex) {
+          this.uploadFile(this.uploadlist[this.uploadIndex]);
+        }
+      }; //请求完成
+      uploadRequest.onerror = (evt) => {
+        this.uploadIndex++;
+
+        this.uploadlist.pop(0);
+        if (this.uploadlist.length > 0) {
+          this.uploadFile(this.uploadlist[this.uploadIndex]);
+        }
+      }; //请求失败
+
+      uploadRequest.upload.onprogress = (evt) => {
+        // event.total是需要传输的总字节，event.loaded是已经传输的字节。如果event.lengthComputable不为真，则event.total等于0
+        if (evt.lengthComputable) {
+          //
+          fileObj.percent = Math.round((evt.loaded / evt.total) * 100) + "%";
+        } else {
+          fileObj.percent = 0;
+        }
+      }; //【上传进度调用方法实现】
+      uploadRequest.upload.onloadstart = function () {
+        //上传开始执行方法
+        this.ot = new Date().getTime(); //设置上传开始时间
+        this.oloaded = 0; //设置上传开始时，以上传的文件大小为0
+      };
+      uploadRequest.send(new Blob([fileObj])); //开始上传，发送form数据
+      fileObj.status = "上传中";
+    },
+
+    downloadFile(page_url, file) {
+      var that = this;
+      var downloadRequest = new XMLHttpRequest();
+      let apiKey = store.get("APIKey");
+      const key = btoa(`api:${apiKey}`);
+      downloadRequest.withCredentials = true;
+      downloadRequest.open("POST", page_url, true);
+      downloadRequest.setRequestHeader("Content-Type", "application/json");
+      downloadRequest.setRequestHeader("Authorization", `Basic ${key}`);
+
+      //监听进度事件
+      downloadRequest.addEventListener(
+        "progress",
+        function (evt) {
+          if (evt.lengthComputable) {
+            var percentComplete = evt.loaded / evt.total;
+            console.log(percentComplete);
+          }
+        },
+        false
+      );
+
+      downloadRequest.responseType = "blob";
+      var fileObj = file;
+      downloadRequest.onreadystatechange = function () {
+        if (
+          downloadRequest.readyState === 4 &&
+          downloadRequest.status === 200
+        ) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var buffer = new Buffer(reader.result);
+            fs.writeFile(
+              store.get("outputPath") + "/" + fileObj.name,
+              buffer,
+              {},
+              (err, res) => {
+                if (err) {
+                  console.error(err);
+                  return;
+                }
+              }
+            );
+          };
+          reader.readAsArrayBuffer(downloadRequest.response); //假设blob已定义,且为MP4视频
+        }
+      };
+      downloadRequest.send();
+    },
+  },
+};
+</script>
+<style scoped>
+.container {
+  height: 500px;
+  background-image: linear-gradient(to bottom right, #85c3e0, #3478b6);
+  overflow: hidden;
+  margin: 0px !important;
+}
+
+.bg {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+  left: 31.25%;
+  top: 15%;
+}
+
+.bgcontainer {
+  width: 400px;
+  height: 400px;
+  position: absolute;
+}
+
+.tip {
+  position: absolute;
+  color: #b4b4b4;
+  font-size: 17px;
+  font-weight: bold;
+  width: 400px;
+  text-align: center;
+  top: 60%;
+  letter-spacing: 0px;
+}
+
+.tool {
+  padding: 0px 15px;
+  color: white;
+  font-size: 15px;
+  display: flex;
+  width: 370px;
+  justify-content: space-between;
+  position: absolute;
+  left: 0px;
+  top: 340px;
+}
+
+#setting {
+  background: url(./assets/setting.png) no-repeat center center;
+  width: 30px;
+  height: 30px;
+  background-size: 30px 30px;
+  cursor: pointer;
+}
+
+#folder {
+  background: url(./assets/folder.png) no-repeat center center;
+  width: 30px;
+  height: 30px;
+  background-size: 30px 30px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.setting-input {
+  position: absolute;
+  top: 390px;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+
+.key-input {
+  width: 200px;
+}
+
+.input-container {
+  width: 400px;
+  height: 28px;
+}
+
+.input-title {
+  width: 120px;
+  display: inline-block;
+  text-align: right;
+}
+
+.list {
+  max-height: 300px;
+  overflow: auto;
+  position: absolute;
+}
+
+.lshow {
+  display: block;
+}
+
+.lhidden {
+  display: none;
+}
+
+.cell {
+  height: 50px;
+  width: 380px;
+  margin: 5px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini-img {
+  width: 45px;
+  height: 45px;
+}
+
+.upload-status {
+  height: 50px;
+  line-height: 50px;
+  color: white;
+  font-size: 13px;
+}
+
+.upload-percent {
+  height: 50px;
+  line-height: 50px;
+  color: white;
+}
+</style>

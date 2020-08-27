@@ -1,15 +1,16 @@
 import { app, BrowserWindow } from 'electron';
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
-  app.quit();
-}
+import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import { enableLiveReload } from 'electron-compile';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-const createWindow = () => {
+const isDevMode = process.execPath.match(/[\\/]electron/);
+
+if (isDevMode) enableLiveReload();
+
+const createWindow = async () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 400,
@@ -17,14 +18,16 @@ const createWindow = () => {
     webPreferences: {
       nodeIntegration: true
     }
-
   });
 
   // and load the index.html of the app.
   mainWindow.loadURL(`file://${__dirname}/index.html`);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (isDevMode) {
+    await installExtension(VUEJS_DEVTOOLS);
+    mainWindow.webContents.openDevTools();
+  }
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
@@ -56,8 +59,6 @@ app.on('activate', () => {
     createWindow();
   }
 });
-
-
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
