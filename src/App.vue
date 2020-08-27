@@ -3,11 +3,11 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-25 17:52:23
+ * @LastEditTime: 2020-08-27 17:34:32
 -->
 <template>
   <div class="container">
-    <div class="bgcontainer" id="drag">
+    <div :class="bgcontainer" id="drag">
       <div :class="listClass">
         <div class="cell" v-for="(item, index) in uploadlist" :key="index">
           <img :src="item.path" class="mini-img" />
@@ -15,10 +15,13 @@
           <div class="upload-percent">{{item.percent}}</div>
         </div>
       </div>
-      <img :src="dropImg" class="bg" alt />
-      <div :class="tipClass">Drop .JPG/.PNG Images here!</div>
+      <div class="bg-container">
+        <img :src="dropImg" class="bg" alt />
+        <div :class="tipClass">Drop .JPG/.PNG Images here!</div>
+      </div>
+
       <div class="tool">
-        <div>0 tasks</div>
+        <div>{{uploadlist.length}} tasks</div>
         <div style="display: flex;">
           <div id="folder" @click="openDirectory"></div>
           <div id="setting" @click="settingClick"></div>
@@ -76,28 +79,15 @@ export default {
       origin: store.get("origin"),
       APIKey: store.get("APIKey"),
       url: "https://api.tinify.com/shrink",
+      bgcontainer:
+        store.get("window-height") === 500 ? "bgcontainer-show" : "bgcontainer",
+      outputPath: this.getOutputPath(),
     };
   },
 
   components: {},
 
-  computed: {
-    outputPath() {
-      if (store.get("outputPath")) {
-        return store.get("outputPath");
-      }
-      var p = navigator.platform;
-
-      if (p.indexOf("Win") == 0) {
-        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
-        return os.homedir() + "/Downloads/TinyAll-output";
-      } else if (p.indexOf("Mac") == 0) {
-        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
-        return os.homedir() + "/Downloads/TinyAll-output";
-      }
-      return "";
-    },
-  },
+  computed: {},
 
   watch: {
     APIKey(newval, oldval) {
@@ -109,6 +99,11 @@ export default {
   },
 
   mounted() {
+    fs.exists(this.outputPath, function (exists) {
+      if (!exists) {
+        fs.mkdir(this.outputPath, function () {});
+      }
+    });
     const dragWrapper = document.getElementById("drag");
     dragWrapper.addEventListener("drop", (e) => {
       e.preventDefault(); //阻止e的默认行为
@@ -124,12 +119,31 @@ export default {
   },
 
   methods: {
+    getOutputPath() {
+      if (store.get("outputPath")) {
+        return store.get("outputPath");
+      }
+      var p = navigator.platform;
+
+      if (p.indexOf("Win") == 0) {
+        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
+        return os.homedir() + "/Downloads/TinyAll-output";
+      } else if (p.indexOf("Mac") == 0) {
+        store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
+        return os.homedir() + "/Downloads/TinyAll-output";
+      }
+      return "";
+    },
     //setting click
     settingClick(e) {
       if (BrowserWindow.getFocusedWindow().getSize()[1] === 500) {
         BrowserWindow.getFocusedWindow().setSize(400, 400, false);
+        this.bgcontainer = "bgcontainer";
+        store.set("window-height", 400);
       } else {
         BrowserWindow.getFocusedWindow().setSize(400, 500, false);
+        this.bgcontainer = "bgcontainer-show";
+        store.set("window-height", 500);
       }
     },
     // outputpath
@@ -148,7 +162,12 @@ export default {
           properties: ["openDirectory"],
           title: "select picture",
         })
-        .then((res) => {});
+        .then((res) => {
+          if (res.canceled === false && res.filePaths.length) {
+            store.set("outputPath", res.filePaths[0]);
+            this.outputPath = res.filePaths[0];
+          }
+        });
     },
     openDirectory() {
       fs.exists(store.get("outputPath"), function (exists) {
@@ -175,6 +194,8 @@ export default {
     },
 
     uploadQueue(file) {
+      file.status = "等待上传";
+      file.percent = "--";
       this.uploadlist.push(file);
       if (!this.isbusy) {
         this.uploadFile(file);
@@ -195,6 +216,10 @@ export default {
       uploadRequest.setRequestHeader("Authorization", `Basic ${key}`);
       uploadRequest.setRequestHeader("Content-Type", "image/png");
       uploadRequest.onload = (evt) => {
+        fileObj.status = "等待下载";
+        fileObj.percent = "0%";
+        let index = this.uploadlist.indexOf(fileObj);
+        this.$set(this.uploadlist, index, fileObj);
         //服务断接收完文件返回的结果
         this.uploadIndex++;
         var data = JSON.parse(evt.target.responseText);
@@ -204,14 +229,18 @@ export default {
         }
         if (this.uploadlist.length > this.uploadIndex) {
           this.uploadFile(this.uploadlist[this.uploadIndex]);
+        } else {
+          this.isbusy = false;
         }
       }; //请求完成
       uploadRequest.onerror = (evt) => {
+        fileObj.status = "上传出错";
         this.uploadIndex++;
 
-        this.uploadlist.pop(0);
-        if (this.uploadlist.length > 0) {
+        if (this.uploadlist.length > this.uploadIndex) {
           this.uploadFile(this.uploadlist[this.uploadIndex]);
+        } else {
+          this.isbusy = false;
         }
       }; //请求失败
 
@@ -221,16 +250,15 @@ export default {
           //
           fileObj.percent = Math.round((evt.loaded / evt.total) * 100) + "%";
         } else {
-          fileObj.percent = 0;
+          fileObj.percent = "0%";
         }
+        let index = this.uploadlist.indexOf(fileObj);
+        this.$set(this.uploadlist, index, fileObj);
       }; //【上传进度调用方法实现】
-      uploadRequest.upload.onloadstart = function () {
-        //上传开始执行方法
-        this.ot = new Date().getTime(); //设置上传开始时间
-        this.oloaded = 0; //设置上传开始时，以上传的文件大小为0
-      };
+      uploadRequest.upload.onloadstart = function () {};
       uploadRequest.send(new Blob([fileObj])); //开始上传，发送form数据
       fileObj.status = "上传中";
+      fileObj.percent = "0%";
     },
 
     downloadFile(page_url, file) {
@@ -248,8 +276,12 @@ export default {
         "progress",
         function (evt) {
           if (evt.lengthComputable) {
-            var percentComplete = evt.loaded / evt.total;
-            console.log(percentComplete);
+            var percentComplete =
+              Math.round((evt.loaded / evt.total) * 100) + "%";
+            file.percent = percentComplete;
+            file.status = "下载中";
+            let index = that.uploadlist.indexOf(file);
+            that.$set(that.uploadlist, index, file);
           }
         },
         false
@@ -262,22 +294,41 @@ export default {
           downloadRequest.readyState === 4 &&
           downloadRequest.status === 200
         ) {
+          fileObj.status = "下载完成";
+          fileObj.percent = "100%";
+          let index = that.uploadlist.indexOf(fileObj);
+          that.$set(that.uploadlist, index, fileObj);
           var reader = new FileReader();
           reader.onload = function () {
-            var buffer = new Buffer(reader.result);
-            fs.writeFile(
-              store.get("outputPath") + "/" + fileObj.name,
-              buffer,
-              {},
-              (err, res) => {
+            var buffer = Buffer.from(reader.result);
+
+            if (store.get("origin")) {
+              fs.unlinkSync(file.path);
+              fs.writeFile(file.path, buffer, {}, (err, res) => {
                 if (err) {
                   console.error(err);
                   return;
                 }
-              }
-            );
+              });
+            } else {
+              fs.writeFile(
+                store.get("outputPath") + "/" + fileObj.name,
+                buffer,
+                {},
+                (err, res) => {
+                  if (err) {
+                    console.error(err);
+                    return;
+                  }
+                }
+              );
+            }
           };
           reader.readAsArrayBuffer(downloadRequest.response); //假设blob已定义,且为MP4视频
+        } else {
+          fileObj.status = "下载失败";
+          let index = that.uploadlist.indexOf(fileObj);
+          that.$set(that.uploadlist, index, fileObj);
         }
       };
       downloadRequest.send();
@@ -287,10 +338,19 @@ export default {
 </script>
 <style scoped>
 .container {
-  height: 500px;
+  width: 100%;
+  height: 100vh;
   background-image: linear-gradient(to bottom right, #85c3e0, #3478b6);
   overflow: hidden;
   margin: 0px !important;
+}
+
+.bg-container {
+  width: 100%;
+  height: 378px;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .bg {
@@ -303,8 +363,16 @@ export default {
 
 .bgcontainer {
   width: 400px;
-  height: 400px;
+  height: 378px;
   position: absolute;
+  overflow: hidden;
+}
+
+.bgcontainer-show {
+  width: 400px;
+  height: 478px;
+  position: absolute;
+  overflow: hidden;
 }
 
 .tip {
@@ -397,7 +465,7 @@ export default {
 }
 
 .mini-img {
-  width: 45px;
+  width: auto;
   height: 45px;
 }
 

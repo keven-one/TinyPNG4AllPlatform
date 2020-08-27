@@ -1,6 +1,6 @@
 {
-  "name": "vue-electron",
-  "productName": "vue-electron",
+  "name": "tinypng4allplatform",
+  "productName": "TinyPNG4AllPlatform",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/index.js",
@@ -29,16 +29,27 @@
         ]
       },
       "electronPackagerConfig": {
-        "packageManager": "yarn"
+        "packageManager": "yarn",
+        "icon": "src/assets/zip",
+        "asar": true,
+        "overwrite": true
       },
       "electronWinstallerConfig": {
-        "name": "vue_electron"
+        "name": "TinyPNG4AllPlatform",
+        "packageName": "TinyPNG4AllPlatform"
       },
-      "electronInstallerDebian": {},
-      "electronInstallerRedhat": {},
+      "electronInstallerDebian": {
+        "name": "TinyPNG4AllPlatform",
+        "packageName": "TinyPNG4AllPlatform"
+      },
+      "electronInstallerRedhat": {
+        "name": "TinyPNG4AllPlatform",
+        "packageName": "TinyPNG4AllPlatform"
+      },
       "github_repository": {
-        "owner": "",
-        "name": ""
+        "owner": "FateOfKing",
+        "name": "TinyPNG4AllPlatform",
+        "repository": "https://github.com/FateOfKing/TinyPNG4AllPlatform"
       },
       "windowsStoreConfig": {
         "packageName": "",
