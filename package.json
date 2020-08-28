@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "build": "electron-builder"
   },
   "keywords": [],
   "author": "king",
@@ -57,19 +58,71 @@
       }
     }
   },
+  "build": {
+    "asar": true,
+    "artifactName": "TinyPNG4AllPlatform",
+    "compression": "maximum",
+    "electronDownload": {
+      "mirror": "http://npm.taobao.org/mirrors/electron/"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "runAfterFinish": true
+    },
+    "publish": [{
+      "provider": "generic",
+      "url": "http://localhost/download/"
+    }],
+    "productName": "TinyPNG4AllPlatform",
+    "appId": "com.electron.TinyPNG4AllPlatform",
+    "directories": {
+      "output": "build"
+    },
+    "dmg": {
+      "contents": [{
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "src/assets/logo.icns"
+    },
+    "win": {
+      "icon": "src/assets/logo.ico",
+      "target": "nsis"
+    },
+    "linux": {
+      "icon": ""
+    }
+  },
+
+
   "dependencies": {
     "electron-compile": "^6.4.4",
     "electron-devtools-installer": "^2.1.0",
     "electron-squirrel-startup": "^1.0.0",
-    "electron-store": "^6.0.0"
+    "electron-store": "^6.0.0",
+    "vue": "^2.1.7",
+    "vueify": "^9.4.1"
   },
   "devDependencies": {
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
+    "electron-builder": "^22.8.0",
     "electron-forge": "^5.2.4",
-    "electron-prebuilt-compile": "8.2.0",
-    "vue": "^2.1.7",
-    "vueify": "^9.4.1"
+    "electron-prebuilt-compile": "8.2.0"
   }
 }
