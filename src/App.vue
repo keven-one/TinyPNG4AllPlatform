@@ -3,25 +3,25 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-27 17:34:32
+ * @LastEditTime: 2020-08-28 10:46:28
 -->
 <template>
   <div class="container">
-    <div :class="bgcontainer" id="drag">
-      <div :class="listClass">
-        <div class="cell" v-for="(item, index) in uploadlist" :key="index">
-          <img :src="item.path" class="mini-img" />
-          <div class="upload-status">{{item.status}}</div>
-          <div class="upload-percent">{{item.percent}}</div>
-        </div>
+    <div :class="listClass">
+      <div class="cell" v-for="(item, index) in uploadlist" :key="index">
+        <img :src="item.path" class="mini-img" />
+        <div class="upload-status">{{item.status}}</div>
+        <div class="upload-percent">{{item.percent}}</div>
       </div>
+    </div>
+    <div :class="bgcontainer" id="drag">
       <div class="bg-container">
         <img :src="dropImg" class="bg" alt />
         <div :class="tipClass">Drop .JPG/.PNG Images here!</div>
       </div>
 
       <div class="tool">
-        <div>{{uploadlist.length}} tasks</div>
+        <div>{{uploadlist.length}} 图片</div>
         <div style="display: flex;">
           <div id="folder" @click="openDirectory"></div>
           <div id="setting" @click="settingClick"></div>
@@ -33,12 +33,12 @@
           <input id="key" class="key-input" type="text" placeholder="API Key" v-model="APIKey" />
         </div>
         <div class="input-container">
-          <label class="input-title">Output Path:</label>
+          <label class="input-title">输出路径:</label>
           <input
             id="output"
             class="key-input"
             type="text"
-            placeholder="Output Path"
+            placeholder="输出路径"
             webkitdirectory
             directory
             :value="outputPath"
@@ -47,7 +47,7 @@
           <button @click="selectfile">...</button>
         </div>
         <div class="input-container">
-          <label class="input-title">Replace Origin:</label>
+          <label class="input-title">替换原图:</label>
           <input id="replace" type="checkbox" v-model="origin" value="Origin" />
         </div>
       </div>
@@ -362,14 +362,14 @@ export default {
 }
 
 .bgcontainer {
-  width: 400px;
+  width: 100%;
   height: 378px;
   position: absolute;
   overflow: hidden;
 }
 
 .bgcontainer-show {
-  width: 400px;
+  width: 100%;
   height: 478px;
   position: absolute;
   overflow: hidden;
@@ -443,7 +443,8 @@ export default {
 
 .list {
   max-height: 300px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: absolute;
 }
 
