@@ -15,6 +15,9 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     width: 400,
     height: 400,
+    frame: true, //取消window自带的关闭最小化等
+    resizable: false, //禁止改变主窗口尺寸
+    useContentSize: false,
     webPreferences: {
       nodeIntegration: true
     }

@@ -3,7 +3,7 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-31 10:33:17
+ * @LastEditTime: 2020-08-28 10:46:28
 -->
 <template>
   <div class="container">
@@ -21,7 +21,7 @@
       </div>
 
       <div class="tool">
-        <div>{{uploadlist.length}} tasks</div>
+        <div>{{uploadlist.length}} 图片</div>
         <div style="display: flex;">
           <div id="folder" @click="openDirectory"></div>
           <div id="setting" @click="settingClick"></div>
@@ -33,12 +33,12 @@
           <input id="key" class="key-input" type="text" placeholder="API Key" v-model="APIKey" />
         </div>
         <div class="input-container">
-          <label class="input-title">Output Path:</label>
+          <label class="input-title">输出路径:</label>
           <input
             id="output"
             class="key-input"
             type="text"
-            placeholder="Output Path"
+            placeholder="输出路径"
             webkitdirectory
             directory
             :value="outputPath"
@@ -47,7 +47,7 @@
           <button @click="selectfile">...</button>
         </div>
         <div class="input-container">
-          <label class="input-title">Replace Origin:</label>
+          <label class="input-title">替换原图:</label>
           <input id="replace" type="checkbox" v-model="origin" value="Origin" />
         </div>
       </div>
@@ -99,10 +99,6 @@ export default {
   },
 
   mounted() {
-    /*获取electron窗体的菜单栏*/
-    const menu = require("electron").remote.Menu;
-    /*隐藏electron创听的菜单栏*/
-    menu.setApplicationMenu(null);
     fs.exists(this.outputPath, function (exists) {
       if (!exists) {
         fs.mkdir(this.outputPath, function () {});
@@ -111,21 +107,6 @@ export default {
     const dragWrapper = document.getElementById("drag");
     dragWrapper.addEventListener("drop", (e) => {
       e.preventDefault(); //阻止e的默认行为
-      if (!store.get("APIKey")) {
-        dialog
-          .showMessageBox({
-            type: "error",
-            title: "APIKey is required",
-            message: "Please Input APIKey",
-            buttons: ["OK", "Get It"],
-          })
-          .then((result) => {
-            if (result.response === 1) {
-              shell.openExternal("https://tinypng.com/developers");
-            }
-          });
-        return;
-      }
       const files = e.dataTransfer.files;
       if (files && files.length >= 1) {
         this.addPng(files);
@@ -146,7 +127,7 @@ export default {
 
       if (p.indexOf("Win") == 0) {
         store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
-        return os.homedir() + "/Downloads/TinyAll-output";
+        return os.homedir() + "\\Downloads\\TinyAll-output";
       } else if (p.indexOf("Mac") == 0) {
         store.set("outputPath", os.homedir() + "/Downloads/TinyAll-output");
         return os.homedir() + "/Downloads/TinyAll-output";
@@ -155,12 +136,12 @@ export default {
     },
     //setting click
     settingClick(e) {
-      if (BrowserWindow.getFocusedWindow().getSize()[1] === 500) {
-        BrowserWindow.getFocusedWindow().setSize(400, 400, false);
+      if (BrowserWindow.getFocusedWindow().getContentSize()[1] > 400) {
+        BrowserWindow.getFocusedWindow().setContentSize(400, 400, false);
         this.bgcontainer = "bgcontainer";
         store.set("window-height", 400);
       } else {
-        BrowserWindow.getFocusedWindow().setSize(400, 500, false);
+        BrowserWindow.getFocusedWindow().setContentSize(400, 500, false);
         this.bgcontainer = "bgcontainer-show";
         store.set("window-height", 500);
       }
