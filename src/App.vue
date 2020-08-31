@@ -3,7 +3,7 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-28 10:46:28
+ * @LastEditTime: 2020-08-31 09:55:04
 -->
 <template>
   <div class="container">
@@ -99,6 +99,10 @@ export default {
   },
 
   mounted() {
+    /*获取electron窗体的菜单栏*/
+    const menu = require("electron").remote.Menu;
+    /*隐藏electron创听的菜单栏*/
+    menu.setApplicationMenu(null);
     fs.exists(this.outputPath, function (exists) {
       if (!exists) {
         fs.mkdir(this.outputPath, function () {});
