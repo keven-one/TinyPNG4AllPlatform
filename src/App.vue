@@ -3,7 +3,7 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-31 09:55:04
+ * @LastEditTime: 2020-08-31 10:33:17
 -->
 <template>
   <div class="container">
@@ -21,7 +21,7 @@
       </div>
 
       <div class="tool">
-        <div>{{uploadlist.length}} 图片</div>
+        <div>{{uploadlist.length}} tasks</div>
         <div style="display: flex;">
           <div id="folder" @click="openDirectory"></div>
           <div id="setting" @click="settingClick"></div>
@@ -33,12 +33,12 @@
           <input id="key" class="key-input" type="text" placeholder="API Key" v-model="APIKey" />
         </div>
         <div class="input-container">
-          <label class="input-title">输出路径:</label>
+          <label class="input-title">Output Path:</label>
           <input
             id="output"
             class="key-input"
             type="text"
-            placeholder="输出路径"
+            placeholder="Output Path"
             webkitdirectory
             directory
             :value="outputPath"
@@ -47,7 +47,7 @@
           <button @click="selectfile">...</button>
         </div>
         <div class="input-container">
-          <label class="input-title">替换原图:</label>
+          <label class="input-title">Replace Origin:</label>
           <input id="replace" type="checkbox" v-model="origin" value="Origin" />
         </div>
       </div>
@@ -111,6 +111,21 @@ export default {
     const dragWrapper = document.getElementById("drag");
     dragWrapper.addEventListener("drop", (e) => {
       e.preventDefault(); //阻止e的默认行为
+      if (!store.get("APIKey")) {
+        dialog
+          .showMessageBox({
+            type: "error",
+            title: "APIKey is required",
+            message: "Please Input APIKey",
+            buttons: ["OK", "Get It"],
+          })
+          .then((result) => {
+            if (result.response === 1) {
+              shell.openExternal("https://tinypng.com/developers");
+            }
+          });
+        return;
+      }
       const files = e.dataTransfer.files;
       if (files && files.length >= 1) {
         this.addPng(files);
