@@ -3,13 +3,13 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-09-01 20:54:56
+ * @LastEditTime: 2020-09-01 22:01:53
 -->
 <template>
   <div class="container">
     <div :class="listClass">
       <div class="cell" v-for="(item, index) in uploadlist" :key="index">
-        <img :src="item.path" class="mini-img" />
+        <img :src="item.weburl" class="mini-img" />
         <div class="upload-status">{{item.status}}</div>
         <div class="upload-percent">{{item.percent}}</div>
       </div>
@@ -104,16 +104,19 @@ export default {
     const Menu = electron.remote.Menu;
     /*隐藏electron创听的菜单栏*/
     Menu.setApplicationMenu(null);
-    if (store.get("window-height") === 500) {
-      BrowserWindow.getFocusedWindow().setContentSize(400, 500, false);
-      this.bgcontainer = "bgcontainer-show";
-      store.set("window-height", 500);
-    } else {
-      BrowserWindow.getFocusedWindow().setContentSize(400, 400, false);
-      this.bgcontainer = "bgcontainer";
-      store.set("window-height", 400);
-    }
-    console.log(store.get("window-height"));
+    this.$nextTick(() => {
+      setTimeout(() => {
+        if (store.get("window-height") === 500) {
+          BrowserWindow.getFocusedWindow().setContentSize(400, 500, false);
+          this.bgcontainer = "bgcontainer-show";
+          store.set("window-height", 500);
+        } else {
+          BrowserWindow.getFocusedWindow().setContentSize(400, 400, false);
+          this.bgcontainer = "bgcontainer";
+          store.set("window-height", 400);
+        }
+      }, 1000);
+    });
     fs.exists(this.outputPath, function (exists) {
       if (!exists) {
         fs.mkdir(this.outputPath, function () {});
@@ -226,6 +229,7 @@ export default {
     uploadQueue(file) {
       file.status = "等待上传";
       file.percent = "--";
+      file.weburl = URL.createObjectURL(file);
       this.uploadlist.push(file);
       if (!this.isbusy) {
         this.uploadFile(file);

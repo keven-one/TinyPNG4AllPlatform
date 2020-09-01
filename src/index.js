@@ -1,6 +1,20 @@
-import { app, BrowserWindow } from 'electron';
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import { enableLiveReload } from 'electron-compile';
+/*
+ * @Description: Description
+ * @Author: Yongchao Wang
+ * @Date: 2020-09-01 19:56:24
+ * @LastEditors: Yongchao Wang
+ * @LastEditTime: 2020-09-01 21:50:29
+ */
+import {
+  app,
+  BrowserWindow
+} from 'electron';
+import installExtension, {
+  VUEJS_DEVTOOLS
+} from 'electron-devtools-installer';
+import {
+  enableLiveReload
+} from 'electron-compile';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -19,7 +33,8 @@ const createWindow = async () => {
     resizable: false, //禁止改变主窗口尺寸
     useContentSize: false,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      webSecurity: false
     }
   });
 
