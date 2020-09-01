@@ -3,7 +3,7 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-08-28 10:46:28
+ * @LastEditTime: 2020-09-01 20:07:32
 -->
 <template>
   <div class="container">
@@ -21,7 +21,7 @@
       </div>
 
       <div class="tool">
-        <div>{{uploadlist.length}} 图片</div>
+        <div>{{uploadlist.length}} tasks</div>
         <div style="display: flex;">
           <div id="folder" @click="openDirectory"></div>
           <div id="setting" @click="settingClick"></div>
@@ -33,7 +33,7 @@
           <input id="key" class="key-input" type="text" placeholder="API Key" v-model="APIKey" />
         </div>
         <div class="input-container">
-          <label class="input-title">输出路径:</label>
+          <label class="input-title">OutputPath:</label>
           <input
             id="output"
             class="key-input"
@@ -47,7 +47,7 @@
           <button @click="selectfile">...</button>
         </div>
         <div class="input-container">
-          <label class="input-title">替换原图:</label>
+          <label class="input-title">ReplaceOrigin:</label>
           <input id="replace" type="checkbox" v-model="origin" value="Origin" />
         </div>
       </div>
@@ -107,6 +107,21 @@ export default {
     const dragWrapper = document.getElementById("drag");
     dragWrapper.addEventListener("drop", (e) => {
       e.preventDefault(); //阻止e的默认行为
+      if (!store.get("APIKey")) {
+        dialog
+          .showMessageBox({
+            type: "warning",
+            title: "APIKey Is Required",
+            message: "Please Enter APIKey",
+            buttons: ["OK", "Get It Now"],
+          })
+          .then((result) => {
+            if (result.response === 1) {
+              shell.openExternal("https://tinypng.com/developers");
+            }
+          });
+        return;
+      }
       const files = e.dataTransfer.files;
       if (files && files.length >= 1) {
         this.addPng(files);
