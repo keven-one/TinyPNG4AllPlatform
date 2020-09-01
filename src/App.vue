@@ -99,6 +99,16 @@ export default {
   },
 
   mounted() {
+    if (store.get("window-height") === 500) {
+      BrowserWindow.getFocusedWindow().setContentSize(400, 500, false);
+      this.bgcontainer = "bgcontainer-show";
+      store.set("window-height", 500);
+    } else {
+      BrowserWindow.getFocusedWindow().setContentSize(400, 400, false);
+      this.bgcontainer = "bgcontainer";
+      store.set("window-height", 400);
+    }
+    console.log(store.get("window-height"));
     fs.exists(this.outputPath, function (exists) {
       if (!exists) {
         fs.mkdir(this.outputPath, function () {});
