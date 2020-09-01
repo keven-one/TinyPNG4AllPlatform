@@ -3,7 +3,7 @@
  * @Author: Yongchao Wang
  * @Date: 2020-08-24 06:46:19
  * @LastEditors: Yongchao Wang
- * @LastEditTime: 2020-09-01 20:07:32
+ * @LastEditTime: 2020-09-01 20:54:56
 -->
 <template>
   <div class="container">
@@ -99,6 +99,11 @@ export default {
   },
 
   mounted() {
+    const electron = require("electron");
+    /*获取electron窗体的菜单栏*/
+    const Menu = electron.remote.Menu;
+    /*隐藏electron创听的菜单栏*/
+    Menu.setApplicationMenu(null);
     if (store.get("window-height") === 500) {
       BrowserWindow.getFocusedWindow().setContentSize(400, 500, false);
       this.bgcontainer = "bgcontainer-show";
